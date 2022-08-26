@@ -11,85 +11,90 @@
 #include <fcntl.h>  // for open
 #include <unistd.h> // for close
 #include <netdb.h>  //netbd.h es necesitada por la estructura hostent
-#include<string.h>
+#include <string.h>
 
 #define BUFFSIZE 1
-#define	ERROR	-1
+#define ERROR -1
 
 char buffer[BUFFSIZE];
 char *text;
 
-int main(int argc, char *argv[])
+int main()
 {
-    //Lee argumento 2 (puerto) y empieza a setear el socket
-    if (argc > 2)
+
+    char ip[100];
+    char puerto[100];
+    struct hostent *he;
+    struct sockaddr_in server;
+    int fd, numbytes;
+
+    printf("*** Configurando Conexion ***\n");
+    printf("-> Digite la direccion ip del servidor: ");
+    gets(ip);
+    printf("-> Digite el puerto: ");
+    fgets(puerto, sizeof(puerto), stdin);
+
+    char direccionArchivo[100];
+    printf("-> Ingrese la direccion del archivo o ingrese 'end' para terminar: ");
+    gets(direccionArchivo);
+
+    if ((he = gethostbyname("localhost")) == NULL)
     {
+        printf("No se puede encontrar el server con el ip: %s\n", ip);
+        exit(-1);
+    }
 
-        char *ip;
-        int fd, numbytes, puerto;
-        char buf[100];
-        puerto = atoi(argv[2]);
-        ip = argv[1];    //Aca lee el argumento 1 (ip)
-
-        struct hostent *he;
-        struct sockaddr_in server;
-
-        if ((he = gethostbyname(ip)) == NULL)
-        {
-            printf("gethostbyname() error\n");
-            exit(-1);
-        }
-
-        if ((fd = socket(AF_INET, SOCK_STREAM, 0)) == -1)
-        {
-            printf("socket() error\n");
-            exit(-1);
-        }
-
-        // Datos del servidor
-        server.sin_family = AF_INET;
-        server.sin_port = htons(puerto);
-        server.sin_addr = *((struct in_addr *)he->h_addr);
-        bzero(&(server.sin_zero), 8);
-        
-        if (connect(fd, (struct sockaddr *)&server,
-                    sizeof(struct sockaddr)) == -1)
-        {
-            printf("connect() error\n");
-            exit(-1);
-        }
-
-        //*****Abriendo el archivo y enviando****
-        //Aca habria que implementar logica para que "test.txt" no este quemado
-
-        FILE *archivo = fopen("test.txt", "rb");
+    while (strcmp(direccionArchivo, "end") != 0)
+    {
+        FILE *archivo = fopen(direccionArchivo, "rb");
         if (!archivo)
         {
-            perror("Error al abrir el archivo:");
-            exit(EXIT_FAILURE);
+            int error = 0;
+            printf("-->> No se encuentra el archivo, intente de nuevo\n");
         }
-        /*Se envia el archivo*/
-        fread(buffer, sizeof(char), BUFFSIZE, archivo);
-        while (!feof(archivo))
+        else
         {
+            if ((fd = socket(AF_INET, SOCK_STREAM, 0)) == -1)
+            {
+                printf("socket() error\n");
+                exit(-1);
+            }
 
-            if (send(fd, buffer, BUFFSIZE, 0) == ERROR)
-                perror("Error al enviar el archivo:");
+            // Datos del servidor
+            server.sin_family = AF_INET;
+            server.sin_port = htons(atoi(puerto));
+            server.sin_addr = *((struct in_addr *)he->h_addr);
+            bzero(&(server.sin_zero), 8);
+
+            //*****Abriendo el archivo y enviando****
+
+            if (connect(fd, (struct sockaddr *)&server,
+                        sizeof(struct sockaddr)) == -1)
+            {
+                printf("-> No se pudo conectar al socket\n");
+                exit(-1);
+            }
+
+            /*Se envia el archivo*/
             fread(buffer, sizeof(char), BUFFSIZE, archivo);
+            while (!feof(archivo))
+            {
+
+                if (send(fd, buffer, BUFFSIZE, 0) == ERROR)
+                    perror("->Error al enviar el archivo:");
+                fread(buffer, sizeof(char), BUFFSIZE, archivo);
+            }
+            send(fd, "|", BUFFSIZE, 0); // Este caracter le indica al servidor que ya dejo de enviar caracteres. (Se puede cambiar por otro menos comun)
+           //printf("Archivo enviado\n");
+
+            int consonantes = 0;
+
+            recv(fd, &consonantes, sizeof(consonantes), 0); // Aca recibi la respuesta de cuantas consonantes hay. Se puede hacer lo mismo para cualquier otra info que se necesite
+
+            printf("--> Consonantes: %d\n", consonantes);
+            close(fd);
         }
-        send(fd, "|", BUFFSIZE, 0); //Este caracter le indica al servidor que ya dejo de enviar caracteres. (Se puede cambiar por otro menos comun)
-        printf("Archivo enviado\n");
-
-        int consonantes = 0;
-
-        recv(fd, &consonantes, sizeof(consonantes), 0);  //Aca recibi la respuesta de cuantas consonantes hay. Se puede hacer lo mismo para cualquier otra info que se necesite
-
-        printf("Consonantes: %d\n", consonantes);
-
-        close(fd);  //Cierra el socket
-    }
-    else
-    {
-        printf("No se ingreso el ip y puerto por parametro\n");
+        printf("\nIngrese la direccion del archivo o ingrese 'end' para terminar: ");
+        gets(direccionArchivo);
     }
 }
