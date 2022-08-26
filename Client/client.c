@@ -80,9 +80,11 @@ int main(int argc, char *argv[])
         send(fd, "|", BUFFSIZE, 0); //Este caracter le indica al servidor que ya dejo de enviar caracteres. (Se puede cambiar por otro menos comun)
         printf("Archivo enviado\n");
 
-        recv(fd, buffer, 2, 0);  //Aca recibi la respuesta de cuantas consonantes hay. Se puede hacer lo mismo para cualquier otra info que se necesite
+        int consonantes = 0;
 
-        printf("Consonantes: %s\n", buffer);
+        recv(fd, &consonantes, sizeof(consonantes), 0);  //Aca recibi la respuesta de cuantas consonantes hay. Se puede hacer lo mismo para cualquier otra info que se necesite
+
+        printf("Consonantes: %d\n", consonantes);
 
         close(fd);  //Cierra el socket
     }
