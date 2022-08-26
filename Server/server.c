@@ -7,6 +7,13 @@
 #include <fcntl.h> // for open
 #include <unistd.h> // for close
 
+#define BUFFSIZE 1
+#define	ERROR	-1
+
+
+char buffer[BUFFSIZE];
+
+void recibirArchivo(int);
 
 int main(int argc, char **argv)
 {
@@ -56,7 +63,9 @@ int main(int argc, char **argv)
                 exit(-1);
             }
 
-            send(fd2, "Bienvenido a mi servidor.\n", 26, 0);
+            recibirArchivo(fd2);
+
+            send(fd2, "2\n", 2, 0);  //Aca envia una respuesta simulando la cantidad de consonantes que encontro
 
             close(fd2); /* cierra fd2 */
         }
@@ -68,4 +77,32 @@ int main(int argc, char **argv)
     }
 
     return 0;
+}
+
+
+void recibirArchivo(int SocketFD){
+
+    char buffer[1];
+    int recibido = -1;
+    printf("Esperando archivo\n");
+
+    /*Se abre el archivo para escritura*/
+    FILE *file;
+    file = fopen("archivoRecibido","wb");
+
+    recv(SocketFD, buffer, 1, 0);
+    
+    while(buffer[0] != '|'){
+        printf("Recibi del cliente// %s\n", buffer);
+        fwrite(buffer,sizeof(char),1,file);
+        recv(SocketFD, buffer, 1, 0);
+    }//Termina la recepción del archivo
+
+    printf("Archivo recibido\n");
+
+    send(SocketFD, "2", BUFFSIZE, 0);
+    
+    fclose(file);
+
+
 }
