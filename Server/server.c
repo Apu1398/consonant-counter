@@ -65,6 +65,8 @@ int main(int argc, char **argv)
             int consonantes = contarConsonantes();
 
             send(fd2, &consonantes, sizeof(consonantes), 0); // Aca envia una respuesta simulando la cantidad de consonantes que encontro
+            
+            printf("Resultado enviado...\n");
 
             close(fd2); /* cierra fd2 */
         }
