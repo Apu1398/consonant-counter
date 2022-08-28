@@ -2,6 +2,10 @@
 1. "gcc -o client client.c"
 2. "./client ip puerto"*/
 
+/*Pasos para crear y ejecutar el docker container (linux):
+1. sudo docker image build -t docker-client .
+2. sudo docker container run -it --network="host" docker-client */
+
 #include <stdio.h>
 #include <sys/types.h>
 #include <sys/socket.h>
