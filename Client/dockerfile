@@ -1,0 +1,9 @@
+    FROM gcc:latest
+
+    COPY . /docker
+
+    WORKDIR /docker/
+
+    RUN gcc -o client client.c
+
+    CMD ["./client"]
