@@ -18,6 +18,7 @@ int contarConsonantes();
 
 char *token;
 char ruta[100];
+FILE *logFile;
 
 int main()
 {
@@ -28,9 +29,14 @@ int main()
     char str[200];
     ptr = fopen("/home/apu/Documents/Operativos/consonant-counter/Server/config-file", "r");
 
+    
+    logFile = fopen("/home/apu/Documents/Operativos/consonant-counter/Server/log-file", "w");
+
+
     if (NULL == ptr)
     {
         printf("file can't be opened \n");
+        fprintf(logFile, "El archivo de configuracion no pudo ser abierto");
     }    
     else
     {
@@ -52,12 +58,14 @@ int main()
         if ((fd = socket(AF_INET, SOCK_STREAM, 0)) < 0)
         {
             perror("Error de apertura de socket");
+            fprintf(logFile, "No se pudo abrir el socket\n");
             exit(-1);
         }
 
         if (bind(fd, (struct sockaddr *)&server, sizeof(struct sockaddr)) == -1)
         {
             printf("error en bind() \n");
+            fprintf(logFile, "No se pudo abrir el socket en el puerto especificado\n");
             exit(-1);
         }
 
@@ -67,7 +75,8 @@ int main()
             exit(-1);
         }
 
-        printf("Servidor corriendo en %d\n", puerto);
+        //printf("Servidor corriendo en %d\n", puerto);
+        fprintf(logFile, "El servidor empezo a ejecutarse\n");
 
         // Aceptar conexiones
         while (1)
@@ -85,7 +94,8 @@ int main()
 
             send(fd2, &consonantes, sizeof(consonantes), 0); // Aca envia una respuesta simulando la cantidad de consonantes que encontro
 
-            printf("Resultado enviado...\n");
+            //printf("Resultado enviado...\n");
+            fprintf(logFile, "Se retorna resultado\n");
 
             close(fd2); 
         }
@@ -111,6 +121,8 @@ void recibirArchivo(int SocketFD)
     //printf("%s\n", buffer);
 
     FILE *file = fopen(ruta, "wb");
+
+    fprintf(logFile, "Se guarda archivo\n");
 
     recv(SocketFD, buffer, 1, 0);
 
@@ -148,6 +160,8 @@ int contarConsonantes()
         }
         fread(buffer, sizeof(char), BUFFSIZE, archivo);
     }
+
+    fprintf(logFile, "Se cuentan las consonantes\n");
 
     return consonantes;
 }
