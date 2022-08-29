@@ -6,3 +6,9 @@ Server/server
 Client/client
 
 Server/archivoRecibido
+
+Server/ArchivosRecibidos/
+
+Server/ArchivosRecibidos2/
+
+Server/log-file
