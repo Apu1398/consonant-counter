@@ -6,6 +6,7 @@
 #include <stdlib.h>
 #include <fcntl.h>  // for open
 #include <unistd.h> // for close
+#include<time.h>
 
 #define BUFFSIZE 1
 #define ERROR -1
@@ -15,13 +16,29 @@ char buffer[BUFFSIZE];
 void recibirArchivo(int);
 int contarConsonantes();
 
-int main(int argc, char **argv)
+char *token;
+char ruta[100];
+
+int main()
 {
 
-    if (argc > 1)
+    int fd, fd2, longitud_cliente, puerto;    
+
+    FILE *ptr;
+    char str[200];
+    ptr = fopen("/home/apu/Documents/Operativos/consonant-counter/Server/config-file", "r");
+
+    if (NULL == ptr)
     {
-        int fd, fd2, longitud_cliente, puerto;
-        puerto = atoi(argv[1]);
+        printf("file can't be opened \n");
+    }    
+    else
+    {
+        fgets(str, 200, ptr);
+
+        token = strtok(str, ";");
+
+        puerto = atoi(token);
 
         struct sockaddr_in server;
         struct sockaddr_in client;
@@ -50,6 +67,8 @@ int main(int argc, char **argv)
             exit(-1);
         }
 
+        printf("Servidor corriendo en %d\n", puerto);
+
         // Aceptar conexiones
         while (1)
         {
@@ -65,16 +84,12 @@ int main(int argc, char **argv)
             int consonantes = contarConsonantes();
 
             send(fd2, &consonantes, sizeof(consonantes), 0); // Aca envia una respuesta simulando la cantidad de consonantes que encontro
-            
+
             printf("Resultado enviado...\n");
 
             close(fd2); /* cierra fd2 */
         }
         close(fd);
-    }
-    else
-    {
-        printf("NO se ingreso el puerto por parametro\n");
     }
 
     return 0;
@@ -86,9 +101,16 @@ void recibirArchivo(int SocketFD)
     char buffer[1];
     int recibido = -1;
 
-    /*Se abre el archivo para escritura*/
-    FILE *file;
-    file = fopen("archivoRecibido", "wb");
+    token = strtok(NULL, ";");
+
+    time_t t = time(NULL);
+
+    const char* str2 = ctime(&t);
+   
+    strcat(strcpy(ruta, token), str2);
+    //printf("%s\n", buffer);
+
+    FILE *file = fopen(ruta, "wb");
 
     recv(SocketFD, buffer, 1, 0);
 
@@ -106,19 +128,22 @@ int contarConsonantes()
 
     int consonantes = 0;
     FILE *archivo;
-    archivo = fopen("archivoRecibido", "r");
+    archivo = fopen(ruta, "r");
 
-    if (!archivo){
+    if (!archivo)
+    {
         perror("Error al abrir el archivo:");
         exit(EXIT_FAILURE);
     }
 
     fread(buffer, sizeof(char), BUFFSIZE, archivo);
 
-    while (!feof(archivo)){
+    while (!feof(archivo))
+    {
         char *pPosition = strchr("bcdfghjklmnpqrstvwxyzBCDFGHJKLMNPQRSTVWXYZ", buffer[0]);
 
-        if (pPosition != NULL){
+        if (pPosition != NULL)
+        {
             consonantes++;
         }
         fread(buffer, sizeof(char), BUFFSIZE, archivo);
