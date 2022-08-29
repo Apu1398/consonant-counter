@@ -22,7 +22,7 @@ char ruta[100];
 int main()
 {
 
-    int fd, fd2, longitud_cliente, puerto;    
+   int fd, fd2, longitud_cliente, puerto;    
 
     FILE *ptr;
     char str[200];
@@ -87,7 +87,7 @@ int main()
 
             printf("Resultado enviado...\n");
 
-            close(fd2); /* cierra fd2 */
+            close(fd2); 
         }
         close(fd);
     }
